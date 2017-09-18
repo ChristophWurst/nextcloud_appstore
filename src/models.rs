@@ -1,4 +1,5 @@
 #[derive(Debug, Deserialize)]
+#[allow(non_snake_case)]
 pub struct App {
     pub id: String,
     pub authors: Vec<Author>,

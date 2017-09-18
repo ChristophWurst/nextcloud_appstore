@@ -62,15 +62,11 @@ pub fn get_apps_and_releases(
     Box::new(work)
 }
 
-fn get_app_signature(_: &String) -> Result<String, ()> {
-    Ok("xxx".to_owned())
-}
-
 pub fn publish_app(
     handle: &Handle,
-    app_id: &String,
     url: &String,
     is_nightly: bool,
+    signature: &String,
     api_token: &String,
 ) -> Box<Future<Item = (), Error = &'static str>> {
     let uri = "https://apps.nextcloud.com/api/v1/apps/releases"
@@ -78,7 +74,7 @@ pub fn publish_app(
         .expect("to parse");
     let release = NewRelease {
         download: url.to_owned(),
-        signature: get_app_signature(app_id).unwrap(),
+        signature: signature.to_owned(),
         nightly: is_nightly,
     };
     let release_json = serde_json::to_string(&release).unwrap();

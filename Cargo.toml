@@ -1,11 +1,9 @@
 [package]
-name = "krankerl"
+name = "nextcloud_appstore"
 version = "0.1.0"
 authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
 
 [dependencies]
-docopt = "0.8"
-dotenv = "0.10.1"
 futures = "0.1"
 hyper = "0.11"
 hyper-tls = "0.1"

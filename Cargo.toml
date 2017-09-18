@@ -2,6 +2,13 @@
 name = "nextcloud_appstore"
 version = "0.1.0"
 authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
+description = "Rust library for the Nextcloud app store"
+readme = "README.md"
+repository = https://github.com/ChristophWurst/nextcloud_appstore
+keywords = ["nextcloud"]
+license = "GPL-3.0"
+travis-ci = { repository = "ChristophWurst/nextcloud_appstore" }
+maintenance = { status = "experimental" }
 
 [dependencies]
 futures = "0.1"

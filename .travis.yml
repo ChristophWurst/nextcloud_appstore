@@ -3,10 +3,6 @@ rust:
   - stable
   - beta
   - nightly
-
-branches:
-  only:
-  - master
-
-cache: cargo
-
+matrix:
+  allow_failures:
+    - rust: nightly

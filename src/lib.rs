@@ -9,7 +9,6 @@ extern crate tokio_core;
 pub mod error;
 mod models;
 
-use error::KrankerlError;
 use models::{App, Category, NewRelease};
 use futures::Stream;
 use futures::future::{err, Future};
@@ -19,10 +18,10 @@ use hyper_tls::HttpsConnector;
 use std::vec::Vec;
 use tokio_core::reactor::Handle;
 
-pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error = KrankerlError>> {
+pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error = error::Error>> {
     let uri = match "https://apps.nextcloud.com/api/v1/categories.json".parse() {
         Ok(u) => u,
-        Err(_) => return Box::new(err(KrankerlError::General)),
+        Err(_) => return Box::new(err(error::Error::General)),
     };
     let client = Client::configure()
         .connector(HttpsConnector::new(4, handle).unwrap())
@@ -35,7 +34,7 @@ pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error
                 Ok(apps)
             })
         })
-        .map_err(|err| KrankerlError::Http(err));
+        .map_err(|err| error::Error::Http(err));
 
     Box::new(work)
 }
@@ -43,14 +42,14 @@ pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error
 pub fn get_apps_and_releases(
     handle: &Handle,
     version: &String,
-) -> Box<Future<Item = Vec<App>, Error = KrankerlError>> {
+) -> Box<Future<Item = Vec<App>, Error = error::Error>> {
     let raw_uri = format!(
         "https://apps.nextcloud.com/api/v1/platform/{}/apps.json",
         version
     );
     let uri = match raw_uri.parse() {
         Ok(u) => u,
-        Err(_) => return Box::new(err(KrankerlError::General)),
+        Err(_) => return Box::new(err(error::Error::General)),
     };
     let client = Client::configure()
         .connector(HttpsConnector::new(4, handle).unwrap())
@@ -63,7 +62,7 @@ pub fn get_apps_and_releases(
                 Ok(apps)
             })
         })
-        .map_err(|err| KrankerlError::Http(err));
+        .map_err(|err| error::Error::Http(err));
 
     Box::new(work)
 }
@@ -74,10 +73,10 @@ pub fn publish_app(
     is_nightly: bool,
     signature: &String,
     api_token: &String,
-) -> Box<Future<Item = (), Error = KrankerlError>> {
+) -> Box<Future<Item = (), Error = error::Error>> {
     let uri = match "https://apps.nextcloud.com/api/v1/apps/releases".parse() {
         Ok(u) => u,
-        Err(_) => return Box::new(err(KrankerlError::General)),
+        Err(_) => return Box::new(err(error::Error::General)),
     };
     let release = NewRelease {
         download: url.to_owned(),
@@ -102,7 +101,7 @@ pub fn publish_app(
             println!("Status: {}", res.status());
             Ok(())
         })
-        .map_err(|err| KrankerlError::Http(err));
+        .map_err(|err| error::Error::Http(err));
 
     Box::new(work)
 }

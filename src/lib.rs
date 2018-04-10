@@ -1,3 +1,4 @@
+extern crate failure;
 extern crate futures;
 extern crate hyper;
 extern crate hyper_tls;
@@ -6,22 +7,24 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio_core;
 
-pub mod error;
 mod models;
 
-use models::{App, Category, NewRelease};
+use std::vec::Vec;
+
+use failure::Error;
 use futures::Stream;
 use futures::future::{err, Future};
 use hyper::{Client, Method, Request};
 use hyper::header::{Authorization, ContentLength, ContentType};
 use hyper_tls::HttpsConnector;
-use std::vec::Vec;
 use tokio_core::reactor::Handle;
 
-pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error = error::Error>> {
+use models::{App, Category, NewRelease};
+
+pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error = Error>> {
     let uri = match "https://apps.nextcloud.com/api/v1/categories.json".parse() {
         Ok(u) => u,
-        Err(_) => return Box::new(err(error::Error::General)),
+        Err(e) => return Box::new(err(Error::from(e))),
     };
     let client = Client::configure()
         .connector(HttpsConnector::new(4, handle).unwrap())
@@ -34,19 +37,19 @@ pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error
                 Ok(apps)
             })
                   })
-        .map_err(|err| error::Error::Http(err));
+        .map_err(|err| err.into());
 
     Box::new(work)
 }
 
 pub fn get_apps_and_releases(handle: &Handle,
                              version: &String)
-                             -> Box<Future<Item = Vec<App>, Error = error::Error>> {
+                             -> Box<Future<Item = Vec<App>, Error = Error>> {
     let raw_uri = format!("https://apps.nextcloud.com/api/v1/platform/{}/apps.json",
                           version);
     let uri = match raw_uri.parse() {
         Ok(u) => u,
-        Err(_) => return Box::new(err(error::Error::General)),
+        Err(e) => return Box::new(err(Error::from(e))),
     };
     let client = Client::configure()
         .connector(HttpsConnector::new(4, handle).unwrap())
@@ -60,7 +63,7 @@ pub fn get_apps_and_releases(handle: &Handle,
                 Ok(apps)
             })
                       })
-            .map_err(|err| error::Error::Http(err));
+            .map_err(|err| Error::from(err));
 
     Box::new(work)
 }
@@ -70,10 +73,10 @@ pub fn publish_app(handle: &Handle,
                    is_nightly: bool,
                    signature: &String,
                    api_token: &String)
-                   -> Box<Future<Item = (), Error = error::Error>> {
+                   -> Box<Future<Item = (), Error = Error>> {
     let uri = match "https://apps.nextcloud.com/api/v1/apps/releases".parse() {
         Ok(u) => u,
-        Err(_) => return Box::new(err(error::Error::General)),
+        Err(e) => return Box::new(err(Error::from(e))),
     };
     let release = NewRelease {
         download: url.to_owned(),
@@ -81,7 +84,6 @@ pub fn publish_app(handle: &Handle,
         nightly: is_nightly,
     };
     let release_json = serde_json::to_string(&release).unwrap();
-    println!("{}", release_json);
     let client = Client::configure()
         .connector(HttpsConnector::new(4, handle).unwrap())
         .build(handle);
@@ -94,11 +96,8 @@ pub fn publish_app(handle: &Handle,
     req.set_body(release_json);
     let work = client
         .request(req)
-        .and_then(|res| {
-                      println!("Status: {}", res.status());
-                      Ok(())
-                  })
-        .map_err(|err| error::Error::Http(err));
+        .and_then(|_res| Ok(()))
+        .map_err(|err| Error::from(err));
 
     Box::new(work)
 }

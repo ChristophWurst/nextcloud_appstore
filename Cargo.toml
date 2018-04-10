@@ -1,6 +1,6 @@
 [package]
 name = "nextcloud_appstore"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
 description = "Rust library for the Nextcloud app store"
 readme = "README.md"
@@ -14,9 +14,8 @@ exclude = [
 [badges]
 travis-ci = { repository = "ChristophWurst/nextcloud_appstore" }
 
-maintenance = { status = "experimental" }
-
 [dependencies]
+failure = "0.1.1"
 futures = "0.1"
 hyper = "0.11"
 hyper-tls = "0.1"

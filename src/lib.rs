@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate failure;
 extern crate futures;
 extern crate hyper;
@@ -14,7 +15,7 @@ use std::vec::Vec;
 use failure::Error;
 use futures::Stream;
 use futures::future::{err, Future};
-use hyper::{Client, Method, Request};
+use hyper::{Client, Method, Request, StatusCode};
 use hyper::header::{Authorization, ContentLength, ContentType};
 use hyper_tls::HttpsConnector;
 use tokio_core::reactor::Handle;
@@ -96,8 +97,15 @@ pub fn publish_app(handle: &Handle,
     req.set_body(release_json);
     let work = client
         .request(req)
-        .and_then(|_res| Ok(()))
-        .map_err(|err| Error::from(err));
+        .map_err(|err| Error::from(err))
+        .and_then(|res| match res.status() {
+                      StatusCode::Ok => Ok(()),
+                      StatusCode::Created => Ok(()),
+                      _ => {
+                          Err(format_err!("error uploading release, got HTTP status {}",
+                                          res.status()))
+                      }
+                  });
 
     Box::new(work)
 }

@@ -29,24 +29,21 @@ pub fn get_categories(handle: &Handle) -> Box<Future<Item = Vec<Category>, Error
     let work = client
         .get(uri)
         .and_then(|res| {
-            res.body().concat2().and_then(move |body| {
+                      res.body().concat2().and_then(move |body| {
                 let apps: Vec<Category> = serde_json::from_slice(&body).unwrap();
                 Ok(apps)
             })
-        })
+                  })
         .map_err(|err| error::Error::Http(err));
 
     Box::new(work)
 }
 
-pub fn get_apps_and_releases(
-    handle: &Handle,
-    version: &String,
-) -> Box<Future<Item = Vec<App>, Error = error::Error>> {
-    let raw_uri = format!(
-        "https://apps.nextcloud.com/api/v1/platform/{}/apps.json",
-        version
-    );
+pub fn get_apps_and_releases(handle: &Handle,
+                             version: &String)
+                             -> Box<Future<Item = Vec<App>, Error = error::Error>> {
+    let raw_uri = format!("https://apps.nextcloud.com/api/v1/platform/{}/apps.json",
+                          version);
     let uri = match raw_uri.parse() {
         Ok(u) => u,
         Err(_) => return Box::new(err(error::Error::General)),
@@ -54,26 +51,26 @@ pub fn get_apps_and_releases(
     let client = Client::configure()
         .connector(HttpsConnector::new(4, handle).unwrap())
         .build(handle);
-    let work = client
-        .get(uri)
-        .and_then(|res| {
-            res.body().concat2().and_then(move |body| {
+    let work =
+        client
+            .get(uri)
+            .and_then(|res| {
+                          res.body().concat2().and_then(move |body| {
                 let apps: Vec<App> = serde_json::from_slice(&body).unwrap();
                 Ok(apps)
             })
-        })
-        .map_err(|err| error::Error::Http(err));
+                      })
+            .map_err(|err| error::Error::Http(err));
 
     Box::new(work)
 }
 
-pub fn publish_app(
-    handle: &Handle,
-    url: &String,
-    is_nightly: bool,
-    signature: &String,
-    api_token: &String,
-) -> Box<Future<Item = (), Error = error::Error>> {
+pub fn publish_app(handle: &Handle,
+                   url: &String,
+                   is_nightly: bool,
+                   signature: &String,
+                   api_token: &String)
+                   -> Box<Future<Item = (), Error = error::Error>> {
     let uri = match "https://apps.nextcloud.com/api/v1/apps/releases".parse() {
         Ok(u) => u,
         Err(_) => return Box::new(err(error::Error::General)),
@@ -98,9 +95,9 @@ pub fn publish_app(
     let work = client
         .request(req)
         .and_then(|res| {
-            println!("Status: {}", res.status());
-            Ok(())
-        })
+                      println!("Status: {}", res.status());
+                      Ok(())
+                  })
         .map_err(|err| error::Error::Http(err));
 
     Box::new(work)

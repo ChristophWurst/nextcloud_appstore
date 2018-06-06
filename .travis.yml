@@ -9,4 +9,3 @@ branches:
   - master
 
 cache: cargo
-

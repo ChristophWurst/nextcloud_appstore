@@ -25,7 +25,7 @@ fn get_https_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     Client::builder().build::<_, Body>(https)
 }
 
-pub fn get_categories() -> Box<Future<Item = Vec<Category>, Error = Error>> {
+pub fn get_categories() -> Box<Future<Item = Vec<Category>, Error = Error> + Send> {
     let uri = match "https://apps.nextcloud.com/api/v1/categories.json".parse() {
         Ok(u) => u,
         Err(e) => return Box::new(err(Error::from(e))),
@@ -45,7 +45,9 @@ pub fn get_categories() -> Box<Future<Item = Vec<Category>, Error = Error>> {
     Box::new(work)
 }
 
-pub fn get_apps_and_releases(version: &String) -> Box<Future<Item = Vec<App>, Error = Error>> {
+pub fn get_apps_and_releases(
+    version: &String,
+) -> Box<Future<Item = Vec<App>, Error = Error> + Send> {
     let raw_uri = format!(
         "https://apps.nextcloud.com/api/v1/platform/{}/apps.json",
         version
@@ -74,7 +76,7 @@ pub fn publish_app(
     is_nightly: bool,
     signature: &String,
     api_token: &String,
-) -> Box<Future<Item = (), Error = Error>> {
+) -> Box<Future<Item = (), Error = Error> + Send> {
     let release = NewRelease {
         download: url.to_owned(),
         signature: signature.to_owned(),

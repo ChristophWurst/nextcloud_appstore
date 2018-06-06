@@ -12,8 +12,7 @@ mod models;
 use std::vec::Vec;
 
 use failure::Error;
-use futures::Stream;
-use futures::future::{err, Future};
+use futures::{Future, Stream};
 use hyper::{Body, Method, Request, StatusCode};
 use hyper::client::{Client, HttpConnector};
 use hyper_tls::HttpsConnector;
@@ -25,14 +24,13 @@ fn get_https_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     Client::builder().build::<_, Body>(https)
 }
 
-pub fn get_categories() -> Box<Future<Item = Vec<Category>, Error = Error> + Send> {
-    let uri = match "https://apps.nextcloud.com/api/v1/categories.json".parse() {
-        Ok(u) => u,
-        Err(e) => return Box::new(err(Error::from(e))),
-    };
+pub fn get_categories() -> impl Future<Item = Vec<Category>, Error = Error> + Send {
+    let uri = "https://apps.nextcloud.com/api/v1/categories.json"
+        .parse()
+        .unwrap();
     let client = get_https_client();
 
-    let work = client
+    client
         .get(uri)
         .and_then(|res| {
             res.into_body().concat2().and_then(move |body| {
@@ -40,25 +38,21 @@ pub fn get_categories() -> Box<Future<Item = Vec<Category>, Error = Error> + Sen
                 Ok(apps)
             })
         })
-        .map_err(|err| err.into());
-
-    Box::new(work)
+        .map_err(|err| err.into())
 }
 
 pub fn get_apps_and_releases(
     version: &String,
-) -> Box<Future<Item = Vec<App>, Error = Error> + Send> {
+) -> impl Future<Item = Vec<App>, Error = Error> + Send {
     let raw_uri = format!(
         "https://apps.nextcloud.com/api/v1/platform/{}/apps.json",
         version
     );
-    let uri = match raw_uri.parse() {
-        Ok(u) => u,
-        Err(e) => return Box::new(err(Error::from(e))),
-    };
+    let uri = raw_uri.parse().unwrap();
     let https = hyper_tls::HttpsConnector::new(4).unwrap();
     let client = hyper::Client::builder().build::<_, hyper::Body>(https);
-    let work = client
+
+    client
         .get(uri)
         .and_then(|res| {
             res.into_body().concat2().and_then(move |body| {
@@ -66,9 +60,7 @@ pub fn get_apps_and_releases(
                 Ok(apps)
             })
         })
-        .map_err(|err| Error::from(err));
-
-    Box::new(work)
+        .map_err(|err| Error::from(err))
 }
 
 pub fn publish_app(
@@ -76,7 +68,7 @@ pub fn publish_app(
     is_nightly: bool,
     signature: &String,
     api_token: &String,
-) -> Box<Future<Item = (), Error = Error> + Send> {
+) -> impl Future<Item = (), Error = Error> + Send {
     let release = NewRelease {
         download: url.to_owned(),
         signature: signature.to_owned(),
@@ -101,7 +93,8 @@ pub fn publish_app(
         hyper::header::CONTENT_LENGTH,
         hyper::header::HeaderValue::from_str(&release_json.len().to_string()).unwrap(),
     );
-    let work = client
+
+    client
         .request(req.body(release_json.into()).unwrap())
         .map_err(|err| Error::from(err))
         .and_then(|res| match res.status() {
@@ -111,7 +104,5 @@ pub fn publish_app(
                 "error uploading release, got HTTP status {}",
                 res.status()
             )),
-        });
-
-    Box::new(work)
+        })
 }

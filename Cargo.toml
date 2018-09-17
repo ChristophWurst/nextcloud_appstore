@@ -1,6 +1,6 @@
 [package]
 name = "nextcloud_appstore"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
 description = "Rust library for the Nextcloud app store"
 readme = "README.md"
@@ -17,9 +17,8 @@ travis-ci = { repository = "ChristophWurst/nextcloud_appstore" }
 [dependencies]
 failure = "0.1.1"
 futures = "0.1"
-hyper = "0.11"
-hyper-tls = "0.1"
+hyper = "0.12.10"
+hyper-tls = "0.3.0"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
-tokio-core = "0.1"

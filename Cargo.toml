@@ -16,7 +16,7 @@ travis-ci = { repository = "ChristophWurst/nextcloud_appstore" }
 
 [dependencies]
 failure = "0.1.1"
-futures = "0.1"
+futures = "0.3"
 hyper = "0.12.10"
 hyper-tls = "0.3.0"
 serde = "1.0"

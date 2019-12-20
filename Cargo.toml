@@ -1,6 +1,6 @@
 [package]
 name = "nextcloud_appstore"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
 description = "Rust library for the Nextcloud app store"
 readme = "README.md"

@@ -1,11 +1,7 @@
 #[macro_use]
 extern crate failure;
-extern crate futures;
-extern crate hyper;
-extern crate hyper_tls;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 
 mod models;
 
@@ -17,7 +13,7 @@ use hyper::{Body, Method, Request, StatusCode};
 use hyper::client::{Client, HttpConnector};
 use hyper_tls::HttpsConnector;
 
-use models::{App, Category, NewRelease};
+use crate::models::{App, Category, NewRelease};
 
 fn get_https_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     let https = HttpsConnector::new(4).unwrap();
@@ -100,6 +96,10 @@ pub fn publish_app(
         .and_then(|res| match res.status() {
             StatusCode::OK => Ok(()),
             StatusCode::CREATED => Ok(()),
+            StatusCode::BAD_REQUEST => Err(format_err!(
+                "client-error occurred, got HTTP status {}",
+                res.status()
+            )),
             _ => Err(format_err!(
                 "error uploading release, got HTTP status {}",
                 res.status()

@@ -1,16 +1,25 @@
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate serde_derive;
-
 mod models;
 
-use failure::Error;
 use hyper::client::{Client, HttpConnector};
 use hyper::{Body, Method, Request, StatusCode};
 use hyper_tls::HttpsConnector;
+use thiserror::Error;
 
 use crate::models::NewRelease;
+use hyper::header::InvalidHeaderValue;
+
+#[derive(Error, Debug)]
+#[non_exhaustive]
+pub enum AppstoreError {
+    #[error("Failed to send request to appstore: {0}")]
+    RequestFailed(#[from] hyper::Error),
+    #[error("Client-error occurred, got HTTP status {0}")]
+    BadRequest(StatusCode),
+    #[error("Error uploading release, got HTTP status {0}")]
+    Unknown(StatusCode),
+    #[error("Error invalid token provided, Only visible ASCII characters (32-127) are permitted")]
+    InvalidToken(#[from] InvalidHeaderValue),
+}
 
 fn get_https_client() -> Client<HttpsConnector<HttpConnector>, Body> {
     let https = HttpsConnector::new();
@@ -18,14 +27,14 @@ fn get_https_client() -> Client<HttpsConnector<HttpConnector>, Body> {
 }
 
 pub async fn publish_app(
-    url: &String,
+    url: &str,
     is_nightly: bool,
-    signature: &String,
-    api_token: &String,
-) -> Result<(), Error> {
+    signature: &str,
+    api_token: &str,
+) -> Result<(), AppstoreError> {
     let release = NewRelease {
-        download: url.to_owned(),
-        signature: signature.to_owned(),
+        download: url,
+        signature,
         nightly: is_nightly,
     };
     let release_json = serde_json::to_string(&release).unwrap();
@@ -36,7 +45,7 @@ pub async fn publish_app(
         .uri("https://apps.nextcloud.com/api/v1/apps/releases")
         .header(
             hyper::header::AUTHORIZATION,
-            hyper::header::HeaderValue::from_str(&format!("Token {}", api_token)).unwrap(),
+            hyper::header::HeaderValue::from_str(&format!("Token {}", api_token))?,
         )
         .header(
             hyper::header::CONTENT_TYPE,
@@ -54,13 +63,7 @@ pub async fn publish_app(
     match res.status() {
         StatusCode::OK => Ok(()),
         StatusCode::CREATED => Ok(()),
-        StatusCode::BAD_REQUEST => Err(format_err!(
-            "client-error occurred, got HTTP status {}",
-            res.status()
-        )),
-        _ => Err(format_err!(
-            "error uploading release, got HTTP status {}",
-            res.status()
-        )),
+        StatusCode::BAD_REQUEST => Err(AppstoreError::BadRequest(res.status())),
+        _ => Err(AppstoreError::Unknown(res.status())),
     }
 }

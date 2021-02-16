@@ -2,7 +2,7 @@ mod models;
 
 use hyper::client::{Client, HttpConnector};
 use hyper::{Body, Method, Request, StatusCode};
-use hyper_tls::HttpsConnector;
+use hyper_rustls::HttpsConnector;
 use thiserror::Error;
 
 use crate::models::NewRelease;
@@ -22,7 +22,7 @@ pub enum AppstoreError {
 }
 
 fn get_https_client() -> Client<HttpsConnector<HttpConnector>, Body> {
-    let https = HttpsConnector::new();
+    let https = HttpsConnector::with_webpki_roots();
     Client::builder().build::<_, Body>(https)
 }
 

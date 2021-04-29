@@ -1,0 +1,15 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "02:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: hyper-tls
+    versions:
+    - 0.5.0
+  - dependency-name: hyper
+    versions:
+    - 0.14.1

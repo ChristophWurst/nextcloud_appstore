@@ -1,6 +1,6 @@
 [package]
 name = "nextcloud_appstore"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Christoph Wurst <christoph@winzerhof-wurst.at>"]
 description = "Rust library for the Nextcloud app store"
 readme = "README.md"
@@ -16,8 +16,11 @@ edition = "2018"
 travis-ci = { repository = "ChristophWurst/nextcloud_appstore" }
 
 [dependencies]
-hyper = "0.14"
-hyper-rustls = { version = "0.24", default-features = false, features = ["webpki-tokio"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 serde = { version = "1.0", features = ["derive" ] }
 serde_json = "1.0"
 thiserror = "1.0"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+wiremock = "0.6"
